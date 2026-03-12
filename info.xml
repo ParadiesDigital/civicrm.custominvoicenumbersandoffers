@@ -1,0 +1,58 @@
+<?xml version="1.0"?>
+<extension key="custominvoicenumbersandoffers" type="module">
+  <file>custominvoicenumbersandoffers</file>
+  <name>Custom invoice numbers and offers</name>
+  <description>This extension adds functionality for custom invoice number cycles in a user chosen format and, when activated, a new contribution type 'offers' with it's own number cycle, menu structure and custom displays.</description>
+  <license>AGPL-3.0</license>
+  <authors>
+    <author>
+      <name>Lucas Paradies</name>
+      <email>post@paradies.digital</email>
+      <role>Maintainer</role>
+    </author>
+  </authors>
+  <urls>
+    <url desc="Main Extension Page">https://paradies.digital</url>
+    <url desc="Documentation">https://paradies.digital</url>
+    <url desc="Support">https://paradies.digital</url>
+    <url desc="Licensing">https://www.gnu.org/licenses/agpl-3.0.html</url>
+  </urls>
+  <releaseDate>2026-03-03</releaseDate>
+  <version>1.0.0</version>
+  <develStage>alpha</develStage>
+  <compatibility mode="semver">
+    <comments>Semantic versioning. For example, compatibility with "6.1" implies compatibility with "6.2".</comments>
+    <ver>6.11</ver>
+  </compatibility>
+  <php_compatibility mode="list">
+    <comments>Listed versions. For example, specify both "8.1" and "8.2".</comments>
+    <ver>8.1</ver>
+    <ver>8.2</ver>
+    <ver>8.3</ver>
+    <ver>8.4</ver>
+  </php_compatibility>
+  <smarty_compatibility mode="list">
+    <comments>Listed versions. For example, specify both "4" and "5".</comments>
+    <ver>5</ver>
+  </smarty_compatibility>
+  <comments>This is a new, undeveloped module</comments>
+  <requires>
+    <ext>org.civicrm.search_kit</ext>
+    <ext>org.civicrm.afform</ext>
+  </requires>
+  <classloader>
+    <psr0 prefix="CRM_" path="."/>
+    <psr4 prefix="Civi\" path="Civi"/>
+  </classloader>
+  <civix>
+    <namespace>CRM/Custominvoicenumbersandoffers</namespace>
+    <format>25.10.2</format>
+    <angularModule>crmCustominvoicenumbersandoffers</angularModule>
+  </civix>
+  <mixins>
+    <mixin>mgd-php@2.0.0</mixin>
+    <mixin>scan-classes@1.0.0</mixin>
+    <mixin>setting-php@1.0.0</mixin>
+    <mixin>smarty@1.0.3</mixin>
+  </mixins>
+</extension>

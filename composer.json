@@ -1,0 +1,13 @@
+{
+  "minimum-stability": "dev",
+  "prefer-stable": true,
+  "require-dev": {
+    "civicrm/civix": "^26.01"
+  },
+  "config": {
+    "allow-plugins": {
+      "civicrm/composer-downloads-plugin": true,
+      "civicrm/composer-compile-plugin": true
+    }
+  }
+}

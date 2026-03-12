@@ -1,0 +1,18 @@
+{
+    "name": "civicrm/php-array-doc",
+    "autoload": {
+        "psr-4": {
+            "PhpArrayDocument\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Tim Otten",
+            "email": "totten@civicrm.org"
+        }
+    ],
+    "require": {
+        "php": "~7.3|~8.0"
+    },
+    "license": ["MIT"]
+}

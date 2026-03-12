@@ -1,0 +1,38 @@
+{
+    "chmod": "0755",
+    "directories": [
+        "src",
+        "lib",
+        "upgrades",
+        "extern/src",
+        "extern/mixin"
+    ],
+    "finder": [
+        {
+            "name": "mixin-backports.php",
+            "in": "."
+        },
+        {
+            "name": "*.php",
+            "exclude": [
+              "composer-compile-plugin",
+              "phpunit",
+              "Tests", "Test", "tests", "test"
+            ],
+            "in": "vendor"
+        },
+        {
+            "name": "*.csv",
+            "in": "vendor/totten/license-data"
+        },
+        {
+            "name": "*.txt",
+            "in": "vendor/totten/license-data/licenses"
+        }
+    ],
+    "git-version": "package_version",
+    "main": "bin/civix",
+    "compactors": ["KevinGH\\Box\\Compactor\\PhpScoper"],
+    "output": "bin/civix.phar",
+    "stub": true
+}

@@ -1,0 +1,6 @@
+{
+    "type": "search",
+    "title": "Offer Overview",
+    "server_route": "civicrm\/offer-overview",
+    "permission": "access CiviContribute"
+}

@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<menu>
+  <item>
+    <path>civicrm/custominvoicenumbersandoffers/admin</path>
+    <page_callback>CRM_Custominvoicenumbersandoffers_Form_Admin</page_callback>
+    <title>Custom Invoice Numbers and Offers</title>
+    <access_arguments>administer CiviCRM</access_arguments>
+  </item>
+</menu>

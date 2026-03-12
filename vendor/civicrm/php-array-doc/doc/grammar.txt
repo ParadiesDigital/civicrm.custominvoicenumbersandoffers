@@ -1,0 +1,31 @@
+(*Initial/draft grammar. I don't know a good way to compile this to PHP, so I let chatgpt do an approximation... and then fixed a bunch of issue...*)
+
+document := T_OPEN_TAG sp
+              (T_COMMENT sp)*
+              (use sp)*
+              (T_COMMENT sp)*
+              T_RETURN sp value sp ";" sp
+
+sp := T_WHITESPACE?
+
+use := T_USE sp className sp ";"
+use := T_USE sp className sp T_AS sp alias sp ";"
+
+value := factoryName sp "(" sp (scalar|array) sp ")"
+value := T_FN sp "(" sp ")" sp T_DOUBLE_ARROW sp (scalar|array))
+value := scalar
+value := array
+
+array := "[" sp "]"
+array := T_ARRAY "(" sp ")"
+array := "[" sp arrayItem sp ("," sp arrayItem sp)* ","? "]"
+array := T_ARRAY "(" sp arrayItem sp ("," sp arrayItem sp)* ","? ")"
+
+arrayItem := (T_COMMENT sp)* value
+arrayItem := (T_COMMENT sp)* arrayItemKey sp "=>" sp value
+arrayItemKey := scalar
+
+factoryName := ( className T_DOUBLE_COLON )? functionName
+className := T_STRING (T_NS_SEPARATOR T_STRING)*
+functionName := T_STRING
+scalar := T_CONSTANT_ENCAPSED_STRING | T_LNUMBER | T_DNUMBER | T_STRING["TRUE"] | T_STRING["FALSE"] | T_STRING["NULL"]

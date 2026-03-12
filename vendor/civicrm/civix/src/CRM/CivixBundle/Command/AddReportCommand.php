@@ -1,0 +1,145 @@
+<?php
+namespace CRM\CivixBundle\Command;
+
+use CRM\CivixBundle\Builder\Mixins;
+use Civix;
+use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Output\OutputInterface;
+use CRM\CivixBundle\Builder\Collection;
+use CRM\CivixBundle\Builder\CopyClass;
+use CRM\CivixBundle\Builder\CopyFile;
+use CRM\CivixBundle\Builder\Dirs;
+use CRM\CivixBundle\Builder\PhpData;
+use CRM\CivixBundle\Builder\Template;
+use CRM\CivixBundle\Utils\Path;
+
+class AddReportCommand extends AbstractCommand {
+
+  protected function configure() {
+    parent::configure();
+    $this
+      ->setName('generate:report')
+      ->setDescription('Add a report to a module-extension')
+      ->addArgument('<ClassName>', InputArgument::REQUIRED, 'Base name of the report class (eg "MyReport")')
+      ->addArgument('<CiviComponent>', InputArgument::REQUIRED, 'CiviCRM Component (' . implode(', ', $this->getReportComponents()) . ')')
+      ->addOption('webPath', NULL, InputOption::VALUE_OPTIONAL, 'Path which maps to this report (eg "civicrm/report/my-report")')
+      ->addOption('copy', NULL, InputOption::VALUE_OPTIONAL, 'Full class name of an existing report which should be copied (eg "CRM_Report_Form_Activity")');
+  }
+
+  protected function execute(InputInterface $input, OutputInterface $output): int {
+    $this->assertCurrentFormat();
+
+    //// Figure out template data and put it in $ctx ////
+    $ctx = [];
+    $ctx['type'] = 'module';
+    $ctx['basedir'] = \CRM\CivixBundle\Application::findExtDir();
+    $basedir = new Path($ctx['basedir']);
+
+    $info = $this->getModuleInfo($ctx);
+
+    if (!in_array($input->getArgument('<CiviComponent>'), $this->getReportComponents())) {
+      throw new \Exception("Component must be one of: " . implode(', ', $this->getReportComponents()));
+    }
+
+    $ctx['reportClassName'] = strtr($ctx['namespace'], '/', '_') . '_Form_Report_' . $input->getArgument('<ClassName>');
+    $ctx['reportClassFile'] = $basedir->string(strtr($ctx['reportClassName'], '_', '/') . '.php');
+    $ctx['reportMgdFile'] = $basedir->string(strtr($ctx['reportClassName'], '_', '/') . '.mgd.php');
+    $ctx['reportTplFile'] = $basedir->string('templates', strtr($ctx['reportClassName'], '_', '/') . '.tpl');
+
+    $webPath = $input->getOption('webPath');
+    if (!empty($webPath)) {
+      if (preg_match('/^civicrm\/report\/(.+)$/', $webPath, $matches)) {
+        $ctx['reportUrl'] = strtolower($matches[1]);
+      }
+      else {
+        throw new \Exception("webPath must begin with \"civicrm/report/\"");
+      }
+    }
+    else {
+      $ctx['reportUrl'] = strtolower($ctx['fullName'] . '/' . $input->getArgument('<ClassName>'));
+    }
+
+    //// Construct files ////
+    $output->writeln("<info>Initialize report " . $ctx['reportClassName'] . "</info>");
+
+    $ext = new Collection();
+    $ext->builders['dirs'] = new Dirs([
+      dirname($ctx['reportClassFile']),
+      dirname($ctx['reportMgdFile']),
+      dirname($ctx['reportTplFile']),
+    ]);
+
+    // Register the report in the DB using api/v3/ReportTemplate and hook_civicrm_managed
+    if (!file_exists($ctx['reportMgdFile'])) {
+      $mgdEntities = [
+        [
+          'name' => $ctx['reportClassName'],
+          'entity' => 'ReportTemplate',
+          'params' => [
+            'version' => 3,
+            'label' => $input->getArgument('<ClassName>'),
+            'description' => sprintf("%s (%s)", $input->getArgument('<ClassName>'), $ctx['fullName']),
+            'class_name' => $ctx['reportClassName'],
+            'report_url' => $ctx['reportUrl'],
+            'component' => $input->getArgument('<CiviComponent>') == 'null' ? '' : $input->getArgument('<CiviComponent>'),
+          ],
+        ],
+      ];
+      $header = "// This file declares a managed database record of type \"ReportTemplate\".\n"
+        . "// The record will be automatically inserted, updated, or deleted from the\n"
+        . "// database as appropriate. For more details, see \"hook_civicrm_managed\" at:\n"
+        . "// https://docs.civicrm.org/dev/en/latest/hooks/hook_civicrm_managed";
+      $ext->builders['mgd.php'] = new PhpData($ctx['reportMgdFile'], $header);
+      $ext->builders['mgd.php']->set($mgdEntities);
+    }
+
+    // Create .php & .tpl by either copying from core source tree or using a civix template
+    if ($srcClassName = $input->getOption('copy')) {
+      // To locate the original file, we need to bootstrap Civi and search the include path
+      Civix::boot(['output' => $output]);
+      $civicrm_api3 = Civix::api3();
+      if (!$civicrm_api3 || !$civicrm_api3->local) {
+        $output->writeln("<error>--copy requires access to local CiviCRM source tree. Configure civicrm_api3_conf_path.</error>");
+        return 1;
+      }
+
+      $origTplFile = 'templates/' . preg_replace('/_/', '/', $srcClassName) . '.tpl';
+      $ext->builders['report.php'] = new CopyClass($srcClassName, $ctx['reportClassName'], $ctx['reportClassFile'], FALSE);
+      $ext->builders['page.tpl.php'] = new CopyFile($origTplFile, $ctx['reportTplFile'], FALSE);
+    }
+    else {
+      $ext->builders['report.php'] = new Template('report.php.php', $ctx['reportClassFile'], FALSE, Civix::templating());
+      $ext->builders['page.tpl.php'] = new Template('report.tpl.php', $ctx['reportTplFile'], FALSE, Civix::templating());
+    }
+
+    $ext->builders['mixins'] = new Mixins($info, $basedir->string('mixin'), ['mgd-php@2.0']);
+    $ext->builders['info'] = $info;
+
+    $ext->loadInit($ctx);
+    $ext->save($ctx, $output);
+
+    return 0;
+  }
+
+  /**
+   * Get list of components that reports can be associated with
+   *
+   * @return array(string)
+   */
+  protected function getReportComponents() {
+    return [
+      'CiviCampaign',
+      'CiviCase',
+      'CiviContribute',
+      'CiviEvent',
+      'CiviGrant',
+      'CiviMail',
+      'CiviMember',
+      'CiviPledge',
+      'null',
+    ];
+  }
+
+}

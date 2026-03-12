@@ -1,0 +1,18 @@
+{
+    "name": "totten/license-data",
+    "description": "Dataset with open-source licenses",
+    "authors": [
+        {
+            "name": "Tim Otten",
+            "email": "totten@civicrm.org"
+        }
+    ],
+    "autoload": {
+        "psr-0": {
+            "LicenseData": "src/"
+         }
+    },
+    "require": {
+
+    }
+}
