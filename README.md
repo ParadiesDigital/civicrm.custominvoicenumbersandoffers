@@ -19,4 +19,8 @@ Navigate to "Administer > CiviContribute > Custom Invoice numbers and offers" to
 
 New invoice numbers will be available after. Offers will get there own menu when activated.
 
+## Debugging
+
+To reset the extension, there is a hidden reset button. Inspect the "Edit Setup" headline in the administrative area and unhide the fieldset below it with browser tools.
+
 ## Known Issues
